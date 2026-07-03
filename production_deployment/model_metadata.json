@@ -1,0 +1,36 @@
+{
+  "active_model": "logistic_regression",
+  "cv_f1": 0.48,
+  "feature_cols": [
+    "lastmonth_activity",
+    "lastyear_activity",
+    "number_of_employees"
+  ],
+  "uses_engineering": false,
+  "trained_at": "2026-06-19T12:48:48.435017",
+  "all_scores": {
+    "logistic_regression": {
+      "cv_f1": 0.48,
+      "features": [
+        "lastmonth_activity",
+        "lastyear_activity",
+        "number_of_employees"
+      ]
+    },
+    "random_forest": {
+      "cv_f1": 0.3943,
+      "features": [
+        "lastmonth_activity",
+        "lastyear_activity",
+        "number_of_employees",
+        "activity_ratio",
+        "activity_per_emp",
+        "monthly_per_emp",
+        "zero_month",
+        "log_lastmonth",
+        "log_lastyear",
+        "log_employees"
+      ]
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "input_folder_path":    "sourcedata",
+  "output_folder_path":   "ingesteddata",
+  "test_data_path":       "testdata",
+  "output_model_path":    "models",
+  "prod_deployment_path": "production_deployment",
+  "database": {
+    "host":     "localhost",
+    "port":     3306,
+    "user":     "dra_user",
+    "password": "dra_password_2026",
+    "database": "dra_mlops",
+    "charset":  "utf8mb4"
+  }
+}

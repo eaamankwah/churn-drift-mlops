@@ -1,0 +1,1 @@
+*/10 * * * * cd /path/to/your/project && /usr/bin/python3 fullprocess.py >> /path/to/your/project/cron.log 2>&1

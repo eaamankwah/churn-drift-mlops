@@ -1,0 +1,12 @@
+{
+  "active_model": "logistic_regression",
+  "cv_f1": 0.5455,
+  "feature_cols": [
+    "lastmonth_activity",
+    "lastyear_activity",
+    "number_of_employees"
+  ],
+  "uses_engineering": false,
+  "trained_at": "2026-06-19T12:51:11.236905",
+  "all_scores": {}
+}

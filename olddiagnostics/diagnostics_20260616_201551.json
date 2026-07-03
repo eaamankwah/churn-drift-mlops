@@ -1,0 +1,53 @@
+{
+  "timestamp": "20260616_201551",
+  "ingestion_time": 0.35,
+  "training_time": 1.2,
+  "summary_stats": [
+    {
+      "column": "lastmonth_activity",
+      "mean": 5625.923076923077,
+      "median": 425.0,
+      "std": 19444.774621317832
+    },
+    {
+      "column": "lastyear_activity",
+      "mean": 763.5384615384615,
+      "median": 97.5,
+      "std": 2016.6093569309696
+    },
+    {
+      "column": "number_of_employees",
+      "mean": 457.46153846153845,
+      "median": 99.0,
+      "std": 800.604832899189
+    },
+    {
+      "column": "exited",
+      "mean": 0.5,
+      "median": 0.5,
+      "std": 0.5099019513592785
+    }
+  ],
+  "missing_data": [
+    {
+      "column": "corporation",
+      "missing_pct": 0.0
+    },
+    {
+      "column": "lastmonth_activity",
+      "missing_pct": 0.0
+    },
+    {
+      "column": "lastyear_activity",
+      "missing_pct": 0.0
+    },
+    {
+      "column": "number_of_employees",
+      "missing_pct": 0.0
+    },
+    {
+      "column": "exited",
+      "missing_pct": 0.0
+    }
+  ]
+}
