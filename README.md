@@ -597,8 +597,7 @@ Produces two output artefacts on every run:
 ## Project Structure
 
 ```
-dynamic-risk-assessment/
-│
+churn-risk-mlops/
 ├── sourcedata/                   # Input: raw CSV files (new files trigger pipeline)
 │   ├── dataset1.csv
 │   └── dataset2.csv
@@ -658,6 +657,7 @@ dynamic-risk-assessment/
 └── README.md                        # This file
 ```
 
+A full analysis and discussions can be found in [REPORT](Dynamic_Risk_Assessment_ML_Report.pdf)
 ---
 
 ## Installation
@@ -671,8 +671,8 @@ dynamic-risk-assessment/
 ### 1. Clone and enter the project
 
 ```bash
-git clone https://github.com/your-org/dynamic-risk-assessment.git
-cd dynamic-risk-assessment
+git clone https://github.com/eaamankwah
+cd churn-drift-mlops
 ```
 
 ### 2. Create and activate a virtual environment
@@ -1003,6 +1003,8 @@ crontab -e
 The script is idempotent — when no new data arrives or no model drift is detected, it exits in under a second.
 
 ---
+
+Full report: [REPORT](Dynamic_Risi_Assessment_ML_Report.pdf)
 
 ## Dependencies
 
