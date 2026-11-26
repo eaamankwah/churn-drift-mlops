@@ -1,4 +1,4 @@
-# Dynamic Risk Assessment of Machine Learning Models
+# Churn Drift Machine Learning Operations
 
 > **ML DevOps Engineering**  
 > An end-to-end automated pipeline for client attrition risk classification with continuous monitoring, drift detection, and self-healing retraining.
@@ -130,11 +130,11 @@ The LR baseline scored **F1 = 0.333** on the test set — effectively predicting
 
 `train_best_model()` is what `fullprocess.py` calls on every automated retraining cycle, so the system re-evaluates both algorithms every time drift triggers a retrain — if LR ever outperforms RF on fresh data, the pipeline switches back automatically.
 
-> ⚠️ **Execution order matters when running manually.** `python training.py` (no flag) always trains the rubric-required LR — but it is **guarded**: if a Random Forest is currently the active deployed model, it will print a warning and refuse to overwrite it, rather than silently downgrading production. To intentionally revert to LR, run `python training.py --force`. This guard exists specifically to prevent the common mistake of running `python training.py --best` (deploys RF) followed later by a plain `python training.py` (which, without the guard, would silently re-deploy the weaker LR model).
+ **Execution order matters when running manually.** `python training.py` (no flag) always trains the rubric-required LR — but it is **guarded**: if a Random Forest is currently the active deployed model, it will print a warning and refuse to overwrite it, rather than silently downgrading production. To intentionally revert to LR, run `python training.py --force`. This guard exists specifically to prevent the common mistake of running `python training.py --best` (deploys RF) followed later by a plain `python training.py` (which, without the guard, would silently re-deploy the weaker LR model).
 
-> ℹ️ **The CV winner can legitimately vary between runs.** With ~26 training rows split into 5 folds, each fold holds roughly 5 records — at that scale, cross-validated F1 has high variance, and either model can win depending on exactly which rows land in which fold and what is currently in `sourcedata/`. Seeing Logistic Regression win on one run and Random Forest win on another is **expected behaviour, not a bug** — `train_best_model()` is doing its job correctly by deploying whichever model actually scored higher on that run's data. This instability will shrink as more data accumulates in production.
+> **The CV winner can legitimately vary between runs.** With ~26 training rows split into 5 folds, each fold holds roughly 5 records — at that scale, cross-validated F1 has high variance, and either model can win depending on exactly which rows land in which fold and what is currently in `sourcedata/`. Seeing Logistic Regression win on one run and Random Forest win on another is **expected behaviour, not a bug** — `train_best_model()` is doing its job correctly by deploying whichever model actually scored higher on that run's data. This instability will shrink as more data accumulates in production.
 
-> ✅ **Fixed: non-deterministic file read order was the actual root cause of cross-machine CV result differences.** `ingestion.py` previously used `os.listdir()` to find source CSVs, which does **not** guarantee a consistent file order across operating systems or filesystems. Because `pd.concat()` preserves whatever order the files were read in, `finaldata.csv` could have different row ordering on different machines — and `StratifiedKFold(shuffle=True, random_state=42)` shuffles based on row *position*, not row *content*, so a different row order produces different fold membership even with an identical seed and identical scikit-learn version. On this project's 26-row dataset, that was enough to flip the champion-challenger winner entirely (confirmed: reversing row order alone flipped LR=0.4467/RF=0.4981 to LR=0.6000/RF=0.3543 in testing). `ingestion.py` now sorts the input file list with `sorted()` before reading and sorts the final merged dataset by `corporation` before writing `finaldata.csv`, guaranteeing byte-identical output — and therefore identical CV results — on any machine given the same source files.
+>  **Fixed: non-deterministic file read order was the actual root cause of cross-machine CV result differences.** `ingestion.py` previously used `os.listdir()` to find source CSVs, which does **not** guarantee a consistent file order across operating systems or filesystems. Because `pd.concat()` preserves whatever order the files were read in, `finaldata.csv` could have different row ordering on different machines — and `StratifiedKFold(shuffle=True, random_state=42)` shuffles based on row *position*, not row *content*, so a different row order produces different fold membership even with an identical seed and identical scikit-learn version. On this project's 26-row dataset, that was enough to flip the champion-challenger winner entirely (confirmed: reversing row order alone flipped LR=0.4467/RF=0.4981 to LR=0.6000/RF=0.3543 in testing). `ingestion.py` now sorts the input file list with `sorted()` before reading and sorts the final merged dataset by `corporation` before writing `finaldata.csv`, guaranteeing byte-identical output — and therefore identical CV results — on any machine given the same source files.
 
 ### Cross-validated comparison (5-fold stratified)
 
@@ -223,7 +223,7 @@ flowchart TD
     end
 
     %% ── INGESTION ──────────────────────────────────────────────────
-    subgraph ING["🔄 Stage 1 · Data Ingestion  (ingestion.py)"]
+    subgraph ING[" Stage 1 · Data Ingestion  (ingestion.py)"]
         I1["Scan input_folder_path\nfor *.csv files"]:::ingest
         I2["Concatenate DataFrames\npandas.concat()"]:::ingest
         I3["Deduplicate rows\ndrop_duplicates()"]:::ingest
@@ -232,7 +232,7 @@ flowchart TD
     end
 
     %% ── MYSQL DATABASE ─────────────────────────────────────────────
-    subgraph DB["🗄️  MySQL  ·  dra_mlops  (dbsetup.py)"]
+    subgraph DB["  MySQL  ·  dra_mlops  (dbsetup.py)"]
         direction LR
         D1[("ingested_files\ntable")]:::db
         D2[("model_scores\ntable")]:::db
@@ -240,7 +240,7 @@ flowchart TD
     end
 
     %% ── TRAINING ───────────────────────────────────────────────────
-    subgraph TRN["🧠 Stage 2 · Champion-Challenger Training  (training.py)"]
+    subgraph TRN[" Stage 2 · Champion-Challenger Training  (training.py)"]
         T1["Load finaldata.csv\nengineer_features() → +7 cols"]:::train
         T2A["LogisticRegression\n3 raw features · baseline"]:::train
         T2B["RandomForestClassifier\n10 features · 100 estimators · challenger"]:::train
@@ -250,7 +250,7 @@ flowchart TD
     end
 
     %% ── SCORING ────────────────────────────────────────────────────
-    subgraph SCR["📊 Stage 3 · Dynamic Scoring  (scoring.py)"]
+    subgraph SCR[" Stage 3 · Dynamic Scoring  (scoring.py)"]
         SC1["Load testdata.csv\n+ trainedmodel.pkl"]:::score
         SC2["model.predict(X_test)"]:::score
         SC3["Compute F1 Score\nsklearn.metrics"]:::score
@@ -261,14 +261,14 @@ flowchart TD
     DEC{"⚖️  Model Drift\nDetected?\nnew_F1 < deployed_F1"}:::decision
 
     %% ── DEPLOYMENT ─────────────────────────────────────────────────
-    subgraph DEP["🚀 Stage 4 · Deployment  (deployment.py)"]
+    subgraph DEP[" Stage 4 · Deployment  (deployment.py)"]
         DP1["Copy trainedmodel.pkl\n→ production_deployment/"]:::deploy
         DP2["Copy latestscore.txt\n→ production_deployment/"]:::deploy
         DP3["Copy ingestedfiles.txt\n→ production_deployment/"]:::deploy
     end
 
     %% ── DIAGNOSTICS ────────────────────────────────────────────────
-    subgraph DIAG["🔬 Stage 5 · Diagnostics  (diagnostics.py)"]
+    subgraph DIAG[" Stage 5 · Diagnostics  (diagnostics.py)"]
         DG1["model_predictions()\nRun inference on test set"]:::diag
         DG2["dataframe_summary()\nMean · Median · StdDev"]:::diag
         DG3["dataframe_missing()\nNull % per column"]:::diag
@@ -278,7 +278,7 @@ flowchart TD
     end
 
     %% ── EVIDENTLY MONITORING ───────────────────────────────────────
-    subgraph EV["📡 Stage 6 · Evidently Monitoring  (evidently_monitoring.py)"]
+    subgraph EV[" Stage 6 · Evidently Monitoring  (evidently_monitoring.py)"]
         EV1["compute_data_drift()\nKS-test per feature\np-value < 0.05 → drift"]:::evidently
         EV2["compute_classification_performance()\nAccuracy · Precision · Recall\nF1 · ROC-AUC"]:::evidently
         EV3["compute_prediction_drift()\nTarget vs Prediction\ndistribution comparison"]:::evidently
@@ -286,7 +286,7 @@ flowchart TD
     end
 
     %% ── REPORTING ──────────────────────────────────────────────────
-    subgraph RPT["📄 Stage 7 · Reporting  (reporting.py)"]
+    subgraph RPT[" Stage 7 · Reporting  (reporting.py)"]
         R1["score_model()\nGenerate confusion matrix\nseaborn heatmap"]:::report
         R2["_generate_trend_charts()\nLatency trend · Missing % trend\nfrom MySQL history"]:::report
         R3["generate_pdf_report()\nReportLab · 6 pages"]:::report
@@ -294,7 +294,7 @@ flowchart TD
     end
 
     %% ── REST API ───────────────────────────────────────────────────
-    subgraph API["🌐 REST API  (app.py + apicalls.py)"]
+    subgraph API[" REST API  (app.py + apicalls.py)"]
         A1["POST /prediction\nJSON → predictions list"]:::api
         A2["GET /scoring\nF1 score"]:::api
         A3["GET /summarystats\nMean · Median · StdDev"]:::api
@@ -303,7 +303,7 @@ flowchart TD
     end
 
     %% ── AUTOMATION ─────────────────────────────────────────────────
-    subgraph AUTO["⚙️  Automation  (fullprocess.py + cronjob.txt)"]
+    subgraph AUTO["  Automation  (fullprocess.py + cronjob.txt)"]
         AU1["Cron trigger\n*/10 * * * *"]:::auto
         AU2["Compare source files\nvs ingestedfiles.txt + MySQL"]:::auto
         AU3{"New files\nfound?"}:::decision
@@ -311,7 +311,7 @@ flowchart TD
     end
 
     %% ── OUTPUT ARTIFACTS ────────────────────────────────────────────
-    subgraph OUT["📦 Output Artifacts"]
+    subgraph OUT[" Output Artifacts"]
         direction LR
         O1[/"models/\ntrainedmodel.pkl\nlatestscore.txt"/]:::output
         O2[/"production_deployment/\ntrainedmodel.pkl\nlatestscore.txt\ningestedfiles.txt"/]:::output
@@ -715,7 +715,7 @@ python deployment.py
 python reporting.py
 ```
 
-> ⚠️ **Do not run `python training.py` (no flag) again after `--best`** — if you do, the guard described above will detect that RF is deployed and refuse to downgrade it automatically, printing a warning instead of silently overwriting. This is intentional and safe; just re-run `--best` if you want to retrain.
+>  **Do not run `python training.py` (no flag) again after `--best`** — if you do, the guard described above will detect that RF is deployed and refuse to downgrade it automatically, printing a warning instead of silently overwriting. This is intentional and safe; just re-run `--best` if you want to retrain.
 
 ---
 
@@ -1004,7 +1004,7 @@ The script is idempotent — when no new data arrives or no model drift is detec
 
 ---
 
-Full report: [REPORT](Dynamic_Risi_Assessment_ML_Report.pdf)
+Full report: [REPORT](Dynamic_Risk_Assessment_ML_Report.pdf)
 
 ## Dependencies
 
